@@ -9,7 +9,7 @@ const PORT = process.env.PORT || 3000;
 
 // URL where your app will be hosted.
 // On Render, this will be your .onrender.com URL
-const WEBAPP_URL = process.env.WEBAPP_URL || 'http://localhost:3000';
+const WEBAPP_URL = process.env.WEBAPP_URL || 'https://newaibot.onrender.com';
 
 app.use(express.static(path.join(__dirname, 'public')));
 

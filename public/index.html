@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grok AI - Puter.js</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+    <header>
+        <div class="logo">Grok AI 4.1</div>
+    </header>
+
+    <div id="chat-container">
+        <!-- Messages will appear here -->
+        <div class="message bot-message">
+            Salom! Men Grok AI botman. Puter.js yordamida har bir xonadonga aqlli AI kirib borishini ta'minlaymiz. Qanday savolingiz bor?
+        </div>
+    </div>
+
+    <div class="controls">
+        <div class="model-selector">
+            <div class="model-btn active" data-model="x-ai/grok-4-1-fast">Grok 4.1 Fast</div>
+            <div class="model-btn" data-model="x-ai/grok-2">Grok 2</div>
+            <div class="model-btn" data-model="x-ai/grok-2-image">Rasm Yaratish</div>
+        </div>
+        <div class="input-area">
+            <input type="text" id="user-input" placeholder="Xabaringizni yozing..." autocomplete="off">
+            <button id="send-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const modelBtns = document.querySelectorAll('.model-btn');
+        
+        let currentModel = 'x-ai/grok-4-1-fast';
+
+        // Model selection
+        modelBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                modelBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentModel = btn.dataset.model;
+                appendMessage('bot', `Model o'zgartirildi: ${btn.innerText}. Endi ushbu modelda javob beraman.`);
+            });
+        });
+
+        async function handleSend() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            appendMessage('user', text);
+            userInput.value = '';
+
+            try {
+                if (currentModel === 'x-ai/grok-2-image') {
+                    // Image Generation
+                    appendMessage('bot', 'Rasm chizilyapti, iltimos kuting...');
+                    const image = await puter.ai.txt2img({
+                        prompt: text,
+                        model: 'grok-2-image',
+                        provider: 'xai',
+                    });
+                    
+                    const botMsgDiv = document.createElement('div');
+                    botMsgDiv.className = 'message bot-message';
+                    const imgEl = document.createElement('img');
+                    imgEl.src = image.src;
+                    imgEl.className = 'image-preview';
+                    botMsgDiv.appendChild(imgEl);
+                    chatContainer.appendChild(botMsgDiv);
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
+                } else {
+                    // Chat
+                    const response = await puter.ai.chat(text, {
+                        model: currentModel
+                    });
+                    appendMessage('bot', response.message.content);
+                }
+            } catch (error) {
+                appendMessage('bot', 'Xatolik: ' + error.message);
+                console.error(error);
+            }
+        }
+
+        function appendMessage(role, text) {
+            const div = document.createElement('div');
+            div.className = `message ${role}-message`;
+            div.innerText = text;
+            chatContainer.appendChild(div);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        sendBtn.addEventListener('click', handleSend);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        // Initialize Telegram Web App
+        if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        }
+    </script>
+</body>
+</html>
